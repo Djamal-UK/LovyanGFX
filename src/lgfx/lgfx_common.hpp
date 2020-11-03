@@ -1058,30 +1058,26 @@ namespace lgfx
       auto src_height  = param->src_height;
       auto transp      = param->transp;
 
-      param->src_x32 -= param->src_x32_add;
-      param->src_xe32 -= param->src_x32_add;
-      param->src_y32 -= param->src_y32_add;
-      param->src_ye32 -= param->src_y32_add;
-      do
+      goto label_start;
+      for (;;)
       {
+        d[index] = 0u;
+
+label_continue:
+        if (++index == last) return last;
         param->src_x32 += param->src_x32_add;
         param->src_xe32 += param->src_x32_add;
         param->src_y32 += param->src_y32_add;
         param->src_ye32 += param->src_y32_add;
 
+label_start:
         if (param->src_x == param->src_xe && param->src_y == param->src_ye)
         {
           std::uint32_t x = param->src_x;
           std::uint32_t y = param->src_y;
           std::uint32_t i = x + y * src_width;
-          if (!(s[i] == transp))
-          {
-            d[index].set(s[i].R8(), s[i].G8(), s[i].B8());
-          }
-          else
-          {
-            d[index] = 0u;
-          }
+          if (s[i] == transp) continue;
+          d[index].set(s[i].R8(), s[i].G8(), s[i].B8());
         }
         else
         {
@@ -1130,22 +1126,17 @@ namespace lgfx
               }
             }
           }
-          if (a)
-          {
-            d[index].set( (std::is_same<TSrc, argb8888_t>::value ? a : (a * 255)) / rgbt[3]
-                        , rgbt[2] / a
-                        , rgbt[1] / a
-                        , rgbt[0] / a
-                        );
-          }
-          else
-          {
-            d[index] = 0u;
-          }
+          if (!a) continue;
+          d[index].set( (std::is_same<TSrc, argb8888_t>::value ? a : (a * 255)) / rgbt[3]
+                      , rgbt[2] / a
+                      , rgbt[1] / a
+                      , rgbt[0] / a
+                      );
         }
+        goto label_continue;
 //d[index].a = 255;
 //d[index].b = 255;
-      } while (++index != last);
+      }
       return last;
     }
 
